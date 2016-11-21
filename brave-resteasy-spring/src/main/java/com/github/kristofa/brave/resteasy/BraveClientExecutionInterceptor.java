@@ -66,9 +66,12 @@ public class BraveClientExecutionInterceptor implements ClientExecutionIntercept
 
         final ClientRequest request = ctx.getRequest();
 
-        final HttpClientRequest httpClientRequest = new RestEasyHttpClientRequest(request);
-        final ClientRequestAdapter adapter = new HttpClientRequestAdapter(httpClientRequest, spanNameProvider);
-        requestInterceptor.handle(adapter);
+        // TODO: change this to a factory method (on request) to reduce redundant work
+        HttpClientRequestAdapter requestAdapter = HttpClientRequestAdapter.builder()
+            .spanNameProvider(spanNameProvider)
+            .request(new RestEasyHttpClientRequest(request))
+            .build();
+        requestInterceptor.handle(requestAdapter);
 
         ClientResponse<?> response = null;
         try {
@@ -79,8 +82,10 @@ public class BraveClientExecutionInterceptor implements ClientExecutionIntercept
         finally
         {
             if (response != null) {
-                final HttpResponse httpResponse = new RestEasyHttpClientResponse(response);
-                final ClientResponseAdapter responseAdapter = new HttpClientResponseAdapter(httpResponse);
+                // TODO: change this to a factory method (on response) to reduce redundant work
+                HttpClientResponseAdapter responseAdapter = HttpClientResponseAdapter.builder()
+                    .response(new RestEasyHttpClientResponse(response))
+                    .build();
                 responseInterceptor.handle(responseAdapter);
             }
             else

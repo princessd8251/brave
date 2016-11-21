@@ -2,28 +2,39 @@ package com.github.kristofa.brave.http;
 
 import com.github.kristofa.brave.ClientRequestAdapter;
 import com.github.kristofa.brave.IdConversion;
-import com.github.kristofa.brave.KeyValueAnnotation;
 import com.github.kristofa.brave.SpanId;
 import com.github.kristofa.brave.internal.Nullable;
 import com.twitter.zipkin.gen.Endpoint;
-import zipkin.TraceKeys;
 
-import java.util.Collection;
-import java.util.Collections;
+public class HttpClientRequestAdapter extends HttpRequestAdapter<HttpClientRequest>
+    implements ClientRequestAdapter {
 
-public class HttpClientRequestAdapter implements ClientRequestAdapter {
-
-    private final HttpClientRequest request;
-    private final SpanNameProvider spanNameProvider;
-
-    public HttpClientRequestAdapter(HttpClientRequest request, SpanNameProvider spanNameProvider) {
-        this.request = request;
-        this.spanNameProvider = spanNameProvider;
+    public static Builder builder() {
+        return new Builder();
     }
 
-    @Override
-    public String getSpanName() {
-        return spanNameProvider.spanName(request);
+    public static final class Builder
+        extends HttpRequestAdapter.Builder<HttpClientRequest, Builder> {
+
+        @Override
+        public HttpClientRequestAdapter build() {
+            return new HttpClientRequestAdapter(this);
+        }
+
+        Builder() { // intentionally hidden
+        }
+    }
+
+    /**
+     * @deprecated please use {@link #builder()}
+     */
+    @Deprecated
+    public HttpClientRequestAdapter(HttpClientRequest request, SpanNameProvider spanNameProvider) {
+        this(builder().request(request).spanNameProvider(spanNameProvider));
+    }
+
+    HttpClientRequestAdapter(HttpClientRequestAdapter.Builder builder) { // intentionally hidden
+        super(builder);
     }
 
     @Override
@@ -41,14 +52,7 @@ public class HttpClientRequestAdapter implements ClientRequestAdapter {
     }
 
     @Override
-    public Collection<KeyValueAnnotation> requestAnnotations() {
-        return Collections.singleton(KeyValueAnnotation.create(
-                TraceKeys.HTTP_URL, request.getUri().toString()));
-    }
-
-    @Override
     public Endpoint serverAddress() {
         return null;
     }
-
 }

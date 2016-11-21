@@ -1,19 +1,20 @@
 package com.github.kristofa.brave.http;
 
-
-import java.net.URI;
-import java.util.Collection;
-
 import com.github.kristofa.brave.IdConversion;
 import com.github.kristofa.brave.KeyValueAnnotation;
 import com.github.kristofa.brave.SpanId;
 import com.github.kristofa.brave.TraceData;
+import java.net.URI;
+import java.util.Collection;
 import org.junit.Before;
 import org.junit.Test;
 import zipkin.TraceKeys;
 
 import static junit.framework.Assert.assertNull;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -31,7 +32,9 @@ public class HttpServerRequestAdapterTest {
     public void setup() {
         serverRequest = mock(HttpServerRequest.class);
         spanNameProvider = mock(SpanNameProvider.class);
-        adapter = new HttpServerRequestAdapter(serverRequest, spanNameProvider);
+        adapter = HttpServerRequestAdapter.builder()
+            .request(serverRequest)
+            .spanNameProvider(spanNameProvider).build();
     }
 
     @Test

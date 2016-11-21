@@ -38,10 +38,18 @@ public class JerseyClientTraceFilter extends ClientFilter {
 
     @Override
     public ClientResponse handle(final ClientRequest clientRequest) throws ClientHandlerException {
-
-        clientRequestInterceptor.handle(new HttpClientRequestAdapter(new JerseyHttpRequest(clientRequest), spanNameProvider));
+        // TODO: change this to a factory method (on request) to reduce redundant work
+        HttpClientRequestAdapter requestAdapter = HttpClientRequestAdapter.builder()
+            .spanNameProvider(spanNameProvider)
+            .request(new JerseyHttpRequest(clientRequest))
+            .build();
+        clientRequestInterceptor.handle(requestAdapter);
         final ClientResponse clientResponse = getNext().handle(clientRequest);
-        clientResponseInterceptor.handle(new HttpClientResponseAdapter(new JerseyHttpResponse(clientResponse)));
+        // TODO: change this to a factory method (on response) to reduce redundant work
+        HttpClientResponseAdapter responseAdapter = HttpClientResponseAdapter.builder()
+            .response(new JerseyHttpResponse(clientResponse))
+            .build();
+        clientResponseInterceptor.handle(responseAdapter);
         return clientResponse;
     }
 }

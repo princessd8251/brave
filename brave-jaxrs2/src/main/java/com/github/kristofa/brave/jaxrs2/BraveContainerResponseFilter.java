@@ -1,5 +1,6 @@
 package com.github.kristofa.brave.jaxrs2;
 
+import com.github.kristofa.brave.ServerResponseAdapter;
 import com.github.kristofa.brave.ServerResponseInterceptor;
 import com.github.kristofa.brave.http.HttpResponse;
 import com.github.kristofa.brave.http.HttpServerResponseAdapter;
@@ -36,6 +37,10 @@ public class BraveContainerResponseFilter implements ContainerResponseFilter {
             }
         };
 
-        responseInterceptor.handle(new HttpServerResponseAdapter(httpResponse));
+        // TODO: change this to a factory method (on response) to reduce redundant work
+        ServerResponseAdapter adapter = HttpServerResponseAdapter.builder()
+            .response(httpResponse)
+            .build();
+        responseInterceptor.handle(adapter);
     }
 }

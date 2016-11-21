@@ -63,10 +63,12 @@ public class BravePreProcessInterceptor implements PreProcessInterceptor {
     @Override
     public ServerResponse preProcess(final HttpRequest request, final ResourceMethod method) throws Failure,
         WebApplicationException {
-
-        HttpServerRequest req = new RestEasyHttpServerRequest(request);
-        HttpServerRequestAdapter reqAdapter = new HttpServerRequestAdapter(req, spanNameProvider);
-        reqInterceptor.handle(reqAdapter);
+        // TODO: change this to a factory method (on request) to reduce redundant work
+        HttpServerRequestAdapter adapter = HttpServerRequestAdapter.builder()
+            .spanNameProvider(spanNameProvider)
+            .request(new RestEasyHttpServerRequest(request))
+            .build();
+        reqInterceptor.handle(adapter);
         return null;
     }
 

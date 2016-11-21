@@ -34,9 +34,12 @@ public class BraveContainerRequestFilter implements ContainerRequestFilter {
 
     @Override
     public void filter(ContainerRequestContext containerRequestContext) throws IOException {
-
-        HttpServerRequest request = new JaxRs2HttpServerRequest(containerRequestContext);
-        requestInterceptor.handle(new HttpServerRequestAdapter(request, spanNameProvider));
+        // TODO: change this to a factory method (on request) to reduce redundant work
+        HttpServerRequestAdapter adapter = HttpServerRequestAdapter.builder()
+            .spanNameProvider(spanNameProvider)
+            .request(new JaxRs2HttpServerRequest(containerRequestContext))
+            .build();
+        requestInterceptor.handle(adapter);
     }
 
 }

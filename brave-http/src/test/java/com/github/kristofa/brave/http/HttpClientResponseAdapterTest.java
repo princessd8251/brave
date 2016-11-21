@@ -20,7 +20,9 @@ public class HttpClientResponseAdapterTest {
     @Before
     public void setup() {
         response = mock(HttpResponse.class);
-        adapter = new HttpClientResponseAdapter(response);
+        adapter = HttpClientResponseAdapter.builder()
+            .response(response)
+            .build();
     }
 
     @Test

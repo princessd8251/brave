@@ -32,7 +32,11 @@ public class BraveHttpRequestInterceptor implements HttpRequestInterceptor {
      */
     @Override
     public void process(final HttpRequest request, final HttpContext context) {
-        HttpClientRequestAdapter adapter = new HttpClientRequestAdapter(new HttpClientRequestImpl(request), spanNameProvider);
+        // TODO: change this to a factory method (on request) to reduce redundant work
+        HttpClientRequestAdapter adapter = HttpClientRequestAdapter.builder()
+            .spanNameProvider(spanNameProvider)
+            .request(new HttpClientRequestImpl(request))
+            .build();
         requestInterceptor.handle(adapter);
     }
 }

@@ -20,7 +20,7 @@ public class HttpServerResponseAdapterTest {
     @Before
     public void setup() {
         response = mock(HttpResponse.class);
-        adapter = new HttpServerResponseAdapter(response);
+        adapter = HttpServerResponseAdapter.builder().response(response).build();
     }
 
     @Test

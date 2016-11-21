@@ -1,5 +1,6 @@
 package com.github.kristofa.brave.resteasy;
 
+import com.github.kristofa.brave.ServerResponseAdapter;
 import java.util.logging.Logger;
 
 import javax.ws.rs.ext.Provider;
@@ -51,7 +52,10 @@ public class BravePostProcessInterceptor implements PostProcessInterceptor {
                 return response.getStatus();
             }
         };
-        HttpServerResponseAdapter adapter = new HttpServerResponseAdapter(httpResponse);
+        // TODO: change this to a factory method (on response) to reduce redundant work
+        ServerResponseAdapter adapter = HttpServerResponseAdapter.builder()
+            .response(httpResponse)
+            .build();
         respInterceptor.handle(adapter);
     }
 

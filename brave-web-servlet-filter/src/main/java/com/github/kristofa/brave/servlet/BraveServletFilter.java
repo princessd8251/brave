@@ -1,6 +1,7 @@
 package com.github.kristofa.brave.servlet;
 
 import com.github.kristofa.brave.ServerRequestInterceptor;
+import com.github.kristofa.brave.ServerResponseAdapter;
 import com.github.kristofa.brave.ServerResponseInterceptor;
 import com.github.kristofa.brave.http.HttpResponse;
 import com.github.kristofa.brave.http.HttpServerRequestAdapter;
@@ -53,17 +54,26 @@ public class BraveServletFilter implements Filter {
         } else {
 
             final StatusExposingServletResponse statusExposingServletResponse = new StatusExposingServletResponse((HttpServletResponse) response);
-            requestInterceptor.handle(new HttpServerRequestAdapter(new ServletHttpServerRequest((HttpServletRequest) request), spanNameProvider));
-
             try {
+                // TODO: change this to a factory method (on request) to reduce redundant work
+                HttpServerRequestAdapter adapter = HttpServerRequestAdapter.builder()
+                    .spanNameProvider(spanNameProvider)
+                    .request(new ServletHttpServerRequest((HttpServletRequest) request))
+                    .build();
+                requestInterceptor.handle(adapter);
+
                 filterChain.doFilter(request, statusExposingServletResponse);
             } finally {
-                responseInterceptor.handle(new HttpServerResponseAdapter(new HttpResponse() {
-                    @Override
-                    public int getHttpStatusCode() {
-                        return statusExposingServletResponse.getStatus();
-                    }
-                }));
+                // TODO: change this to a factory method (on response) to reduce redundant work
+                ServerResponseAdapter adapter = HttpServerResponseAdapter.builder()
+                    .response(new HttpResponse() {
+                        @Override
+                        public int getHttpStatusCode() {
+                            return statusExposingServletResponse.getStatus();
+                        }
+                    })
+                    .build();
+                responseInterceptor.handle(adapter);
             }
         }
     }

@@ -1,6 +1,7 @@
 package com.github.kristofa.brave.spring;
 
 import com.github.kristofa.brave.ServerRequestInterceptor;
+import com.github.kristofa.brave.ServerResponseAdapter;
 import com.github.kristofa.brave.ServerResponseInterceptor;
 import com.github.kristofa.brave.ServerSpan;
 import com.github.kristofa.brave.ServerSpanThreadBinder;
@@ -36,26 +37,31 @@ public class ServletHandlerInterceptor extends HandlerInterceptorAdapter {
 
     @Override
     public boolean preHandle(final HttpServletRequest request, final HttpServletResponse response, final Object handler) {
-        requestInterceptor.handle(new HttpServerRequestAdapter(new HttpServerRequest() {
-            @Override
-            public String getHttpHeaderValue(String headerName) {
-                return request.getHeader(headerName);
-            }
-
-            @Override
-            public URI getUri() {
-                try {
-                    return new URI(request.getRequestURI());
-                } catch (URISyntaxException e) {
-                    throw new RuntimeException(e);
+        // TODO: change this to a factory method (on request) to reduce redundant work
+        HttpServerRequestAdapter adapter = HttpServerRequestAdapter.builder()
+            .spanNameProvider(spanNameProvider)
+            .request(new HttpServerRequest() {
+                @Override
+                public String getHttpHeaderValue(String headerName) {
+                    return request.getHeader(headerName);
                 }
-            }
 
-            @Override
-            public String getHttpMethod() {
-                return request.getMethod();
-            }
-        }, spanNameProvider));
+                @Override
+                public URI getUri() {
+                    try {
+                        return new URI(request.getRequestURI());
+                    } catch (URISyntaxException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+
+                @Override
+                public String getHttpMethod() {
+                    return request.getMethod();
+                }
+            })
+            .build();
+        requestInterceptor.handle(adapter);
 
         return true;
     }
@@ -75,12 +81,16 @@ public class ServletHandlerInterceptor extends HandlerInterceptorAdapter {
             serverThreadBinder.setCurrentSpan(span);
         }
 
-       responseInterceptor.handle(new HttpServerResponseAdapter(new HttpResponse() {
-           @Override
-           public int getHttpStatusCode() {
-               return response.getStatus();
-           }
-       }));
+        // TODO: change this to a factory method (on response) to reduce redundant work
+        ServerResponseAdapter adapter = HttpServerResponseAdapter.builder()
+            .response(new HttpResponse() {
+              @Override
+              public int getHttpStatusCode() {
+                return response.getStatus();
+              }
+            })
+            .build();
+        responseInterceptor.handle(adapter);
     }
 
 }

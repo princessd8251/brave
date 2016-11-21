@@ -48,8 +48,12 @@ public class BraveClientHttpRequestInterceptor implements ClientHttpRequestInter
 
     @Override
     public ClientHttpResponse intercept(final HttpRequest request, final byte[] body, final ClientHttpRequestExecution execution) throws IOException {
-
-        requestInterceptor.handle(new HttpClientRequestAdapter(new SpringHttpClientRequest(request), spanNameProvider));
+        // TODO: change this to a factory method (on request) to reduce redundant work
+        HttpClientRequestAdapter requestAdapter = HttpClientRequestAdapter.builder()
+            .spanNameProvider(spanNameProvider)
+            .request(new SpringHttpClientRequest(request))
+            .build();
+        requestInterceptor.handle(requestAdapter);
 
         final ClientHttpResponse response;
 
@@ -63,7 +67,11 @@ public class BraveClientHttpRequestInterceptor implements ClientHttpRequestInter
         }
 
         try {
-            responseInterceptor.handle(new HttpClientResponseAdapter(new SpringHttpResponse(response.getRawStatusCode())));
+            // TODO: change this to a factory method (on response) to reduce redundant work
+            HttpClientResponseAdapter responseAdapter = HttpClientResponseAdapter.builder()
+                .response(new SpringHttpResponse(response.getRawStatusCode()))
+                .build();
+            responseInterceptor.handle(responseAdapter);
         } catch (RuntimeException | IOException up) {
             // Ignore the failure of not being able to get the status code from the response; let the calling code find out themselves
             responseInterceptor.handle(NoAnnotationsClientResponseAdapter.getInstance());

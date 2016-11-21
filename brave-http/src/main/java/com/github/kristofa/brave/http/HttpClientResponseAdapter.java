@@ -1,30 +1,33 @@
 package com.github.kristofa.brave.http;
 
 import com.github.kristofa.brave.ClientResponseAdapter;
-import com.github.kristofa.brave.KeyValueAnnotation;
-import zipkin.TraceKeys;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
+public class HttpClientResponseAdapter extends HttpResponseAdapter
+    implements ClientResponseAdapter {
 
-public class HttpClientResponseAdapter implements ClientResponseAdapter {
-
-    private final HttpResponse response;
-
-    public HttpClientResponseAdapter(HttpResponse response) {
-        this.response = response;
+    public static Builder builder() {
+        return new Builder();
     }
 
-    @Override
-    public Collection<KeyValueAnnotation> responseAnnotations() {
-        int httpStatus = response.getHttpStatusCode();
+    public static final class Builder extends HttpResponseAdapter.Builder<Builder> {
 
-        if ((httpStatus < 200) || (httpStatus > 299)) {
-            return Collections.singleton(KeyValueAnnotation.create(
-                    TraceKeys.HTTP_STATUS_CODE, String.valueOf(httpStatus)));
+        @Override public HttpClientResponseAdapter build() {
+            return new HttpClientResponseAdapter(this);
         }
-        return Collections.emptyList();
+
+        Builder() { // intentionally hidden
+        }
     }
 
+    /**
+     * @deprecated please use {@link #builder()}
+     */
+    @Deprecated
+    public HttpClientResponseAdapter(HttpResponse response) {
+        this(builder().response(response));
+    }
+
+    HttpClientResponseAdapter(Builder builder) { // intentionally hidden
+        super(builder);
+    }
 }

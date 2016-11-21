@@ -2,7 +2,6 @@ package com.github.kristofa.brave.jaxrs2;
 
 import com.github.kristofa.brave.ClientResponseInterceptor;
 import com.github.kristofa.brave.http.HttpClientResponseAdapter;
-import com.github.kristofa.brave.http.HttpResponse;
 import javax.annotation.Priority;
 import javax.inject.Inject;
 import javax.ws.rs.client.ClientRequestContext;
@@ -27,8 +26,10 @@ public class BraveClientResponseFilter implements ClientResponseFilter {
 
     @Override
     public void filter(ClientRequestContext clientRequestContext, ClientResponseContext clientResponseContext) throws IOException {
-
-        final HttpResponse response = new JaxRs2HttpResponse(clientResponseContext);
-        responseInterceptor.handle(new HttpClientResponseAdapter(response));
+        // TODO: change this to a factory method (on response) to reduce redundant work
+        HttpClientResponseAdapter adapter = HttpClientResponseAdapter.builder()
+            .response(new JaxRs2HttpResponse(clientResponseContext))
+            .build();
+        responseInterceptor.handle(adapter);
     }
 }

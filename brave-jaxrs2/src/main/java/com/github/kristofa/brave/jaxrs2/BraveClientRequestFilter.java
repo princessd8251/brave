@@ -1,7 +1,6 @@
 package com.github.kristofa.brave.jaxrs2;
 
 import com.github.kristofa.brave.ClientRequestInterceptor;
-import com.github.kristofa.brave.http.HttpClientRequest;
 import com.github.kristofa.brave.http.HttpClientRequestAdapter;
 import com.github.kristofa.brave.http.SpanNameProvider;
 import javax.annotation.Priority;
@@ -31,7 +30,11 @@ public class BraveClientRequestFilter implements ClientRequestFilter {
 
     @Override
     public void filter(ClientRequestContext clientRequestContext) throws IOException {
-        final HttpClientRequest req = new JaxRs2HttpClientRequest(clientRequestContext);
-        requestInterceptor.handle(new HttpClientRequestAdapter(req, spanNameProvider));
+        // TODO: change this to a factory method (on request) to reduce redundant work
+        HttpClientRequestAdapter adapter = HttpClientRequestAdapter.builder()
+            .spanNameProvider(spanNameProvider)
+            .request(new JaxRs2HttpClientRequest(clientRequestContext))
+            .build();
+        requestInterceptor.handle(adapter);
     }
 }

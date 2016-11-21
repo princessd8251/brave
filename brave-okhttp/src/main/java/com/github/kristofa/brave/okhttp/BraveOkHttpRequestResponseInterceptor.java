@@ -28,10 +28,18 @@ public class BraveOkHttpRequestResponseInterceptor implements Interceptor {
   public Response intercept(Interceptor.Chain chain) throws IOException {
     Request request = chain.request();
     Request.Builder builder = request.newBuilder();
-    OkHttpRequest okHttpRequest = new OkHttpRequest(builder, request);
-    clientRequestInterceptor.handle(new HttpClientRequestAdapter(okHttpRequest, spanNameProvider));
+    // TODO: change this to a factory method (on request) to reduce redundant work
+    HttpClientRequestAdapter requestAdapter = HttpClientRequestAdapter.builder()
+        .spanNameProvider(spanNameProvider)
+        .request(new OkHttpRequest(builder, request))
+        .build();
+    clientRequestInterceptor.handle(requestAdapter);
     Response response = chain.proceed(builder.build());
-    clientResponseInterceptor.handle(new HttpClientResponseAdapter(new OkHttpResponse(response)));
+    // TODO: change this to a factory method (on response) to reduce redundant work
+    HttpClientResponseAdapter responseAdapter = HttpClientResponseAdapter.builder()
+        .response(new OkHttpResponse(response))
+        .build();
+    clientResponseInterceptor.handle(responseAdapter);
     return response;
   }
 

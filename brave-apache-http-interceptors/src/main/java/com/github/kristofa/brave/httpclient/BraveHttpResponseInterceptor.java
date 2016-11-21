@@ -25,8 +25,11 @@ public class BraveHttpResponseInterceptor implements HttpResponseInterceptor {
      */
     @Override
     public void process(final HttpResponse response, final HttpContext context) throws HttpException, IOException {
-        final HttpClientResponseImpl httpClientResponse = new HttpClientResponseImpl(response);
-        responseInterceptor.handle(new HttpClientResponseAdapter(httpClientResponse));
+        // TODO: change this to a factory method (on response) to reduce redundant work
+        HttpClientResponseAdapter adapter = HttpClientResponseAdapter.builder()
+            .response(new HttpClientResponseImpl(response))
+            .build();
+        responseInterceptor.handle(adapter);
     }
 
 }
